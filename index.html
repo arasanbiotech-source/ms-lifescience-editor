@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MS Lifescience — Visual Blog Editor</title>
+<style>
+:root{--navy:#15324b;--teal:#087e8b;--ink:#243746;--muted:#687985;--line:#d9e2e8;--bg:#f3f6f8;--panel:#fff;--soft:#eaf3f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}
+header{background:linear-gradient(110deg,#102d45,#176477);color:#fff;padding:17px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-size:19px;font-weight:700;letter-spacing:.2px}.brand small{display:block;font-size:11px;font-weight:400;opacity:.82;letter-spacing:1.3px;text-transform:uppercase}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,.filebtn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:8px 11px;font-size:13px;cursor:pointer}
+button:hover,.filebtn:hover{border-color:var(--teal);background:#f1fafb}
+button.primary{background:#0b8290;color:#fff;border-color:#0b8290;font-weight:700}
+button.dark{background:#173b53;color:#fff;border-color:#173b53}
+button:disabled{opacity:.45;cursor:not-allowed}
+.layout{max-width:1500px;margin:18px auto;padding:0 16px;display:grid;grid-template-columns:250px minmax(400px,1fr) 270px;gap:14px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.panel h3{margin:0;padding:13px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--navy);letter-spacing:.2px}
+.panelbody{padding:13px}
+.field{margin-bottom:12px}.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=url],input[type=number],select,textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font:13px Arial;color:var(--ink);background:#fff}
+textarea{min-height:75px;resize:vertical}
+.toolgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.toolgrid button{padding:9px 5px}
+.toolgrid button span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:5px;padding:9px;border-bottom:1px solid var(--line);background:#fbfcfd;position:sticky;top:0;z-index:3}
+.toolbar button{min-width:34px;padding:7px 8px}
+.toolbar select{width:auto;max-width:130px}
+.editor-shell{background:#e9eef1;padding:22px;min-height:650px}
+#editor{background:#fff;max-width:850px;min-height:900px;margin:0 auto;padding:48px 55px;box-shadow:0 2px 12px #1b34451a;outline:none;color:#263746;font:16px/1.75 Georgia,serif}
+#editor:focus{box-shadow:0 2px 14px #087e8b30}
+#editor h1,#editor h2,#editor h3{font-family:Arial,sans-serif;color:#173b53;line-height:1.25}
+#editor h1{font-size:30px}#editor h2{font-size:23px;border-bottom:1px solid #dce6ea;padding-bottom:7px}#editor h3{font-size:18px}
+#editor img,#editor video,#editor iframe{max-width:100%}
+#editor table{border-collapse:collapse;width:100%;margin:18px 0;font:14px Arial}
+#editor td,#editor th{border:1px solid #b9c9d1;padding:8px;text-align:left}
+#editor th{background:#eaf3f5;color:#173b53}
+#editor blockquote{border-left:4px solid #0b8290;margin:18px 0;padding:8px 16px;background:#f3f8f9;color:#4c626e}
+#editor figure{margin:20px 0;text-align:center}#editor figcaption{font:13px Arial;color:#657985;margin-top:6px}
+#editor .ms-caption{font:12px Arial;color:#6b7d87;text-align:center;border-top:1px solid #e3eaee;padding-top:12px;margin-top:35px}
+.hint{font-size:12px;color:var(--muted);line-height:1.5}
+.status{padding:9px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.pill{display:inline-block;background:var(--soft);color:#176477;border-radius:20px;padding:3px 8px;font-size:10px}
+details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;font-weight:700;color:var(--navy);font-size:12px}
+#htmlOutput{width:100%;height:300px;font:12px/1.5 Consolas,monospace}
+.dropzone{border:1px dashed #a9bdc6;padding:12px;border-radius:7px;text-align:center;color:var(--muted);font-size:12px}
+footer{text-align:center;color:#71818a;font-size:11px;padding:12px}
+@media(max-width:1050px){.layout{grid-template-columns:220px minmax(350px,1fr)}.right{grid-column:1/-1}}
+@media(max-width:700px){.layout{display:flex;flex-direction:column}.panel,.center{width:100%}.editor-shell{padding:8px}#editor{padding:25px 20px;min-height:700px}.toolbar{position:static}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">MS Lifescience <small>Visual Blog Editor · Blogger HTML export</small></div>
+ <div class="actions">
+  <button class="dark" id="newDoc">New draft</button>
+  <button id="saveLocal">Save draft</button>
+  <button id="loadLocal">Load draft</button>
+  <button class="primary" id="exportBtn">Export Blogger HTML</button>
+ </div>
+</header>
+<div class="layout">
+ <aside class="panel">
+  <h3>Post details</h3><div class="panelbody">
+   <div class="field"><label>Post title</label><input id="postTitle" type="text" placeholder="Enter article title"></div>
+   <div class="field"><label>Labels / tags</label><input id="labels" type="text" placeholder="Biology, Biotechnology, ..."></div>
+   <div class="field"><label>Search description</label><textarea id="description" maxlength="150" placeholder="SEO description (up to 150 characters)"></textarea><div class="hint" id="descCount">0 / 150</div></div>
+   <div class="field"><label>Image / media URL</label><input id="mediaUrl" type="url" placeholder="https://..."></div>
+   <div class="toolgrid">
+    <button data-insert="image">Image<span>from URL</span></button>
+    <button data-insert="video">Video<span>YouTube / URL</span></button>
+    <button data-insert="audio">Audio<span>MP3 URL</span></button>
+    <button data-insert="pdf">PDF / slides<span>embed URL</span></button>
+    <button data-insert="table">Table<span>choose dimensions</span></button>
+    <button data-insert="caption">Caption<span>image note</span></button>
+    <button data-insert="quote">Quote<span>callout</span></button>
+    <button data-insert="divider">Divider<span>section break</span></button>
+   </div>
+   <details><summary>Insert a local image file</summary><p class="hint">Choose an image to preview it in this draft. For Blogger publishing, upload the image to Blogger first and replace its source with the public Blogger image URL before export.</p><input id="localImage" type="file" accept="image/*"></details>
+   <details><summary>Drag-and-drop</summary><div class="dropzone" id="dropzone">Drop an image file here to preview it in the editor.</div></details>
+  </div>
+ </aside>
+ <main class="center panel">
+  <div class="toolbar" aria-label="Formatting toolbar">
+   <button data-cmd="bold" title="Bold"><b>B</b></button><button data-cmd="italic" title="Italic"><i>I</i></button><button data-cmd="underline" title="Underline"><u>U</u></button>
+   <button data-cmd="insertUnorderedList" title="Bulleted list">• List</button><button data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+   <select id="blockFormat" title="Paragraph style"><option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>
+   <select id="fontSize" title="Text size"><option value="">Size</option><option value="2">Small</option><option value="3">Normal</option><option value="4">Large</option><option value="5">Larger</option><option value="6">Very large</option></select>
+   <button data-cmd="justifyLeft" title="Align left">⇤</button><button data-cmd="justifyCenter" title="Center">↔</button><button data-cmd="justifyRight" title="Align right">⇥</button>
+   <button data-cmd="outdent" title="Decrease indent">⇤−</button><button data-cmd="indent" title="Indent">⇥+</button><button data-cmd="undo" title="Undo">↶</button><button data-cmd="redo" title="Redo">↷</button>
+   <button id="linkBtn" title="Insert link">Link</button><button id="clearFormat" title="Clear formatting">Tx</button>
+  </div>
+  <div class="editor-shell"><article id="editor" contenteditable="true" spellcheck="true">
+   <h1>Enter your article title</h1>
+   <p>Start writing your MS Lifescience article here. Use the toolbar to format text, create headings and lists, or use the media tools to add scientific illustrations, tables, videos and other learning resources.</p>
+   <h2>Introduction</h2>
+   <p>Replace this sample text with your article content.</p>
+   <p class="ms-caption">MS Lifescience — A Self Reliant Community</p>
+  </article></div>
+  <div class="status"><span id="wordCount">0 words</span><span id="saveStatus">Draft is in this browser until exported or saved.</span></div>
+ </main>
+ <aside class="panel right">
+  <h3>Preview & export</h3><div class="panelbody">
+   <p class="hint">The editor creates article HTML for Blogger's post editor. It does not publish directly to your blog or upload media.</p>
+   <div class="field"><label>Export format</label><select id="exportMode"><option value="fragment">Blogger post HTML (recommended)</option><option value="full">Complete HTML document</option></select></div>
+   <button class="primary" id="exportBtn2" style="width:100%">Generate HTML</button>
+   <p class="hint">After exporting, copy the HTML and paste it into Blogger's post editor using its HTML view. Add labels and search description in Blogger separately.</p>
+   <div class="field"><label>Generated HTML</label><textarea id="htmlOutput" placeholder="Your Blogger-ready HTML will appear here..." spellcheck="false"></textarea></div>
+   <button id="copyHtml" style="width:100%">Copy HTML</button>
+   <button id="downloadHtml" style="width:100%;margin-top:7px">Download .html file</button>
+   <details><summary>How to add this editor to your blog</summary>
+    <ol class="hint"><li>Host this <b>index.html</b> file on a static hosting service such as GitHub Pages.</li><li>In Blogger, create a page named <b>Visual Editor</b>.</li><li>In the page's HTML view, paste an iframe pointing to your hosted editor URL.</li><li>Publish the page and add it to your blog menu.</li></ol>
+    <p class="hint">Blogger may remove or restrict scripts pasted directly into a page. Hosting the editor separately and embedding it is the more reliable approach.</p>
+   </details>
+  </div>
+ </aside>
+</div>
+<footer>MS Lifescience Visual Editor · Local draft workspace · No content is sent to a server by this page</footer>
+<script>
+(function(){
+ const editor=document.getElementById('editor'), output=document.getElementById('htmlOutput');
+ const $=id=>document.getElementById(id);
+ function focusEditor(){editor.focus()}
+ function cmd(c,v=null){focusEditor();document.execCommand(c,false,v);updateStats()}
+ document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>cmd(b.dataset.cmd)));
+ $('blockFormat').addEventListener('change',e=>{if(e.target.value)cmd('formatBlock',e.target.value)});
+ $('fontSize').addEventListener('change',e=>{if(e.target.value)cmd('fontSize',e.target.value);e.target.value=''});
+ $('linkBtn').onclick=()=>{const u=prompt('Enter the link URL (https://...)');if(u)cmd('createLink',u)};
+ $('clearFormat').onclick=()=>cmd('removeFormat');
+ function insert(html){focusEditor();document.execCommand('insertHTML',false,html);updateStats()}
+ function mediaUrl(){const u=$('mediaUrl').value.trim();if(!u){alert('Enter a public media URL first.');return null}try{return new URL(u).href}catch(e){alert('Please enter a valid URL.');return null}}
+ document.querySelectorAll('[data-insert]').forEach(b=>b.onclick=()=>{
+  const type=b.dataset.insert;
+  if(type==='image'){const u=mediaUrl();if(u)insert('<figure><img src="'+esc(u)+'" alt="Scientific illustration" style="max-width:100%;height:auto"><figcaption>Figure: Add a descriptive caption.</figcaption></figure>')}
+  if(type==='video'){const u=mediaUrl();if(!u)return;let id='';try{const x=new URL(u);id=x.hostname.includes('youtu.be')?x.pathname.slice(1):x.searchParams.get('v')||''}catch(e){};if(id)insert('<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden"><iframe src="https://www.youtube.com/embed/'+esc(id)+'" title="YouTube video" style="position:absolute;width:100%;height:100%;left:0;top:0" frameborder="0" allowfullscreen></iframe></div>');else insert('<video controls style="max-width:100%"><source src="'+esc(u)+'"></video>')}
+  if(type==='audio'){const u=mediaUrl();if(u)insert('<audio controls style="width:100%"><source src="'+esc(u)+'"></audio>')}
+  if(type==='pdf'){const u=mediaUrl();if(u)insert('<div><iframe src="'+esc(u)+'" title="PDF or presentation" width="100%" height="520" style="border:1px solid #ccd6dc"></iframe><p><a href="'+esc(u)+'">Open resource in a new tab</a></p></div>')}
+  if(type==='table'){let r=parseInt(prompt('Number of rows (including heading row):','4'),10),c=parseInt(prompt('Number of columns:','3'),10);if(!r||!c||r<1||c<1||r>20||c>10){alert('Choose 1–20 rows and 1–10 columns.');return}let s='<table><thead><tr>';for(let j=0;j<c;j++)s+='<th>Heading '+(j+1)+'</th>';s+='</tr></thead><tbody>';for(let i=1;i<r;i++){s+='<tr>';for(let j=0;j<c;j++)s+='<td>Enter data</td>';s+='</tr>'}s+='</tbody></table>';insert(s)}
+  if(type==='caption')insert('<p class="ms-caption">Figure: Add a concise scientific caption.</p>');
+  if(type==='quote')insert('<blockquote><p>Enter an important definition, explanation or quotation.</p></blockquote>');
+  if(type==='divider')insert('<hr>');
+ });
+ $('localImage').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>insert('<figure><img src="'+reader.result+'" alt="'+esc(f.name)+'" style="max-width:100%;height:auto"><figcaption>'+esc(f.name)+' — replace with a Blogger-hosted image URL before export.</figcaption></figure>');reader.readAsDataURL(f)});
+ const dz=$('dropzone');['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.style.background='#eaf3f5'}));['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.style.background=''}));dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){const r=new FileReader();r.onload=()=>insert('<figure><img src="'+r.result+'" alt="'+esc(f.name)+'" style="max-width:100%;height:auto"><figcaption>'+esc(f.name)+' — replace with a Blogger-hosted image URL before export.</figcaption></figure>');r.readAsDataURL(f)}});
+ function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+ function cleanHtml(){const clone=editor.cloneNode(true);clone.querySelectorAll('script,style,object,embed').forEach(n=>n.remove());clone.querySelectorAll('*').forEach(el=>{[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||a.name==='contenteditable')el.removeAttribute(a.name)});if(el.tagName==='IMG'&&el.getAttribute('src')?.startsWith('data:'))el.setAttribute('data-needs-upload','true')});return clone.innerHTML}
+ function generate(){const body=cleanHtml();const title=esc($('postTitle').value||editor.querySelector('h1')?.textContent||'MS Lifescience Article');const mode=$('exportMode').value;const result=mode==='full'?'<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title></head><body>'+body+'</body></html>':body;output.value=result;$('saveStatus').textContent='HTML generated. Review media links before publishing.'}
+ $('exportBtn').onclick=generate;$('exportBtn2').onclick=generate;
+ $('copyHtml').onclick=async()=>{if(!output.value)generate();try{await navigator.clipboard.writeText(output.value);$('saveStatus').textContent='HTML copied to clipboard.'}catch(e){output.select();document.execCommand('copy');$('saveStatus').textContent='Copy attempted; use Ctrl+C if needed.'}};
+ $('downloadHtml').onclick=()=>{if(!output.value)generate();const blob=new Blob([output.value],{type:'text/html;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ms-lifescience-blogger-post.html';a.click();URL.revokeObjectURL(a.href)};
+ function updateStats(){const t=editor.innerText.trim();$('wordCount').textContent=(t?t.split(/\s+/).length:0)+' words';$('descCount').textContent=$('description').value.length+' / 150'}
+ editor.addEventListener('input',updateStats);$('description').addEventListener('input',updateStats);
+ function snapshot(){return JSON.stringify({title:$('postTitle').value,labels:$('labels').value,description:$('description').value,content:editor.innerHTML})}
+ $('saveLocal').onclick=()=>{try{localStorage.setItem('mslifescience-visual-draft',snapshot());$('saveStatus').textContent='Draft saved in this browser.'}catch(e){alert('Could not save draft in this browser.')}}; 
+ $('loadLocal').onclick=()=>{const s=localStorage.getItem('mslifescience-visual-draft');if(!s){alert('No saved draft found in this browser.');return}try{const d=JSON.parse(s);$('postTitle').value=d.title||'';$('labels').value=d.labels||'';$('description').value=d.description||'';editor.innerHTML=d.content||'';updateStats();$('saveStatus').textContent='Draft loaded.'}catch(e){alert('Saved draft could not be read.')}};
+ $('newDoc').onclick=()=>{if(!confirm('Start a new draft? Export or save your current work first.'))return;$('postTitle').value='';$('labels').value='';$('description').value='';editor.innerHTML='<h1>New MS Lifescience article</h1><p>Start writing here...</p>';output.value='';updateStats()};
+ updateStats();
+})();
+</script>
+</body>
+</html>
